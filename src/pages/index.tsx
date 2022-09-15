@@ -2,8 +2,31 @@ import Head from 'next/head';
 import Image from 'next/image';
 import styles from '../styles/home.module.scss';
 import techsImages from '../../public/images/techs.svg';
+import { GetStaticProps } from 'next';
 
-export default function Home() {
+import { getPrismicClient } from '../services/prismic';
+import Prismic from '@prismicio/client';
+import {RichText} from 'prismic-dom';
+
+
+type Content = {
+  title: string;
+  titleContent: string;
+  linkAction: string;
+  mobileTitle: string;
+  mobileBanner: string;
+  mobileContent: string;
+  titleWeb: string;
+  webContent: string;
+  webBanner:string;
+}
+interface ContentProps{
+    content: Content;
+}
+
+export default function Home({content}: ContentProps) {
+
+  console.log(content);
   return (
     <>
       <Head>
@@ -13,9 +36,9 @@ export default function Home() {
       <main className={styles.container}>
         <div className={styles.containerHeader}>
           <section className={styles.ctaText}>
-            <h1>Levando vc ao proximo nivel!</h1>
-            <span>Lorem ipsum dolor sit amet consectetur adipisicing elit. Eos libero eius ea vel, reprehenderit eaque impedit, natus fugit officia soluta eveniet vero, minima neque! Maiores inventore natus cumque doloribus nihil!</span>
-            <a>
+            <h1>{content.title}</h1>
+            <span>{content.titleContent}</span>
+            <a href={content.linkAction}>
               <button>
                 Começar agora
               </button>
@@ -28,34 +51,69 @@ export default function Home() {
 
         <div className={styles.sectionContent}>
           <section>
-            <h2>Aprenda criar app</h2>
-            <span>Lorem ipsum dolor sit amet consectetur adipisicing elit. Placeat autem voluptatum harum ducimus veniam sit alias nostrum? Dolore tempore inventore expedita nostrum deleniti eius nihil in neque dolorum, quo tenetur!  </span>
+            <h2>{content.mobileTitle}</h2>
+            <span>{content.mobileContent}</span>
           </section>
 
-          <img src="/images/financasApp.png" alt='teste' />
+          <img src={content.mobileBanner} alt='teste' />
         </div>
 
         <hr className={styles.divisor} />
 
         <div className={styles.sectionContent}>
-          <img src="/images/webDev.png" alt='teste' />
+          <img src={content.webBanner} alt='teste' />
 
           <section>
-            <h2>Aprenda criar app</h2>
-            <span>Lorem ipsum dolor sit amet consectetur adipisicing elit. Placeat autem voluptatum harum ducimus veniam sit alias nostrum? Dolore tempore inventore expedita nostrum deleniti eius nihil in neque dolorum, quo tenetur!  </span>
+            <h2>{content.titleWeb}</h2>
+            <span>{content.webContent}</span>
           </section>
         </div>
 
-         <div className={styles.nextLevelContent}>
+        <div className={styles.nextLevelContent}>
           <Image src={techsImages} alt='text' />
           <h2>Mais de <span className={styles.studentsAmount}>15 mil</span> já levaram sua carreira para o proximo nivel.</h2>
           <span>Lorem ipsum dolor sit amet doloremque dol ore asperiores deserunt distinctio</span>
-          <a>
+          <a href={content.linkAction}>
             <button>ACESSAR TURMA </button>
           </a>
-         
-         </div>
+
+        </div>
       </main>
     </>
   )
+}
+
+
+export const getStaticProps: GetStaticProps = async () => {
+  const prismic = getPrismicClient();
+
+  const response = await prismic.query([
+    Prismic.Predicates.at('document.type', 'home')
+  ])
+
+
+  const { 
+    title, sub_title, link_action,
+    mobile,mobile_content, mobile_banner,
+    title_web, web_content, web_banner 
+  } = response.results[0].data;
+
+  const content = {
+    title: RichText.asText(title),
+    titleContent: RichText.asText(sub_title),
+    linkAction: link_action.url,
+    mobileTitle: RichText.asText(mobile),
+    mobileContent: RichText.asText(mobile_content),
+    mobileBanner: mobile_banner.url,
+    titleWeb: RichText.asText(title_web),
+    webContent: RichText.asText(web_content),
+    webBanner: web_banner.url
+  };
+
+  return {
+    props: {
+      content
+    },
+    revalidate: 60 * 2 // 2 minutes
+  }
 }
