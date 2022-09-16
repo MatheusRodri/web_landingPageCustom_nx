@@ -55,7 +55,6 @@ function Posts({ posts: postsBlog, page, totalPages }: PostProps) {
         }
 
         const getPosts = response.results.map(post => {
-            console.log(post.data.description)
             return {
                 slug: post.uid,
                 title: RichText.asText(post.data.title),
@@ -82,7 +81,7 @@ function Posts({ posts: postsBlog, page, totalPages }: PostProps) {
                 <div className={styles.posts}>
 
                     {posts.map(post => (
-                        <Link key={post.slug} href={`/post/${post.slug}`}>
+                        <Link key={post.slug} href={`/posts/${post.slug}`}>
                             <a key={post.slug}>
                                 <Image
                                     src={post.cover}
